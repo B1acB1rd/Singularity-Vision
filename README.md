@@ -1,73 +1,66 @@
-# React + TypeScript + Vite
+# 🧠 Singularity Vision
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Build. Train. Deploy. Locally.** — A no-code computer vision platform for industry-scale spatial analysis.
 
-Currently, two official plugins are available:
+Singularity Vision is a hybrid desktop system designed to handle complex computer vision tasks—from simple object detection to advanced 3D geospatial reconstruction—without requiring extensive coding knowledge.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Key Features
 
-## React Compiler
+- **No-Code CV Workflows**: Manage datasets, train models, and run inference through a unified graphical interface.
+- **Spatial Vision Lab**: Native support for GeoTIFF, GeoJSON, and R-tree spatial indexing for geospatial computer vision.
+- **Model Hub**: Integrated support for ONNX runtimes and Hugging Face model integration.
+- **Industry Profiles**: Behavioral configurations tailored for Mining, Defense, and Health sectors.
+- **Offline-First**: Privacy-centric design that prioritizes local execution while allowing optional hybrid cloud offloading.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🏗️ Architecture
 
-## Expanding the ESLint configuration
+The system follows a strict engine-isolation principle to ensure scalability and UI responsiveness:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Frontend**: Electron + React + Vite (Fast, responsive UI)
+- **Backend Orchestrator**: Python (FastAPI / gRPC)
+- **Execution Engines**: Modular Python services for Datasets, Training, and Inference.
+- **Storage**: Local file system with SQLite/DuckDB for metadata and spatial indexing.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 📂 Project Structure
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Each workspace follows a strict schema for portability:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+project_root/
+ ├─ project.json       # Core metadata & configuration
+ ├─ datasets/          # Raw images, videos, and tiled geo-data
+ ├─ annotations/       # Versioned label data (Geo-aware)
+ ├─ models/            # ONNX, PyTorch, or TensorFlow models
+ ├─ experiments/       # Immutable training snapshots & metrics
+ ├─ spatial/           # Maps, GeoJSON, and 3D reconstructions
+ └─ outputs/           # Inference results and reports
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🛠️ Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
+- Node.js (v18+)
+- Python 3.10+
+- (Optional) NVIDIA GPU for accelerated training/inference
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Development Setup
+
+1. **Install Dependencies**:
+   ```bash
+   npm install
+   pip install -r backend/requirements.txt
+   ```
+
+2. **Run in Development Mode**:
+   ```bash
+   npm run dev
+   ```
+
+3. **Run with Electron**:
+   ```bash
+   npm run electron:dev
+   ```
+
+## 📝 License
+
+Private - All rights reserved.
