@@ -1,0 +1,3349 @@
+🧠 SINGULARITY VISION
+DETAILED TECHNICAL FEATURE & SYSTEM SPECIFICATION
+🧱 0. GLOBAL ARCHITECTURE (READ THIS FIRST)
+
+Singularity Vision is a hybrid desktop system built on:
+
+Core Stack
+
+Frontend: Electron (React / Vue)
+
+Backend Orchestrator: Python (FastAPI / gRPC / IPC)
+
+Execution Engines: Modular Python services
+
+Local Storage: File system + SQLite / DuckDB
+
+Remote Services: Optional REST / gRPC APIs
+
+Core Principle
+
+The UI never does heavy computation.
+The Python backend never blocks the UI.
+Heavy tasks are isolated, optional, and offloadable.
+
+🧱 1. PROJECT & WORKSPACE SYSTEM
+How it works technically
+
+Each project is a self-contained directory with a strict schema.
+
+project_root/
+ ├─ project.json
+ ├─ datasets/
+ ├─ annotations/
+ ├─ models/
+ ├─ experiments/
+ ├─ spatial/
+ ├─ outputs/
+ └─ logs/
+
+project.json contains:
+{
+  "project_id": "uuid",
+  "industry_profile": "mining",
+  "task_types": ["detection", "mapping"],
+  "execution_mode": "hybrid",
+  "security_level": "offline_allowed",
+  "created_at": "...",
+  "engine_versions": {...}
+}
+
+Key behaviors
+
+Project loading initializes only metadata, not datasets
+
+Datasets and models are lazy-loaded
+
+Experiments are immutable snapshots
+
+Export = zip + manifest
+
+🗂 2. DATASET & DATA MANAGEMENT ENGINE
+Internal Engine: Dataset Engine
+
+Runs as a background Python service.
+
+2.1 Data Ingestion
+Supported inputs
+
+Images → copied or referenced
+
+Video → frame extractor service
+
+Satellite images → tiled on ingest
+
+GeoTIFF → parsed with GDAL
+
+CSV → parsed into spatial index
+
+Processing pipeline
+Raw Data
+ → Validation
+ → Metadata Extraction
+ → Optional Tiling
+ → Indexing
+ → Dataset Registry
+
+Large image tiling (critical)
+
+Images > threshold are split into tiles
+
+Tile metadata keeps original coordinates
+
+Tiles are stored with spatial index
+
+2.2 Dataset Indexing
+
+All datasets are indexed using:
+
+file path
+
+timestamp
+
+spatial bounds (if present)
+
+label summary
+
+Stored in:
+
+SQLite / DuckDB
+
+Optional R-tree spatial index
+
+2.3 Versioning
+
+Each dataset change creates:
+
+hash
+
+diff record
+
+reversible snapshot
+
+No silent overwrites.
+
+✏️ 3. ANNOTATION & LABELING SYSTEM
+Internal Engine: Annotation Engine
+3.1 Annotation Storage Model
+
+Annotations are never baked into images.
+
+They are stored as:
+
+{
+  "image_id": "...",
+  "geometry": {...},
+  "label": "vehicle",
+  "confidence": null,
+  "geo_ref": {...}
+}
+
+
+Supports:
+
+bounding boxes
+
+polygons
+
+temporal segments
+
+geo-coordinates
+
+3.2 Annotation UI → Backend Flow
+
+User draws annotation in Electron UI
+
+UI sends geometry to backend
+
+Backend validates + stores
+
+Dataset index updates stats
+
+3.3 Geo-Aware Annotations
+
+If spatial data exists:
+
+lat/lon attached automatically
+
+annotations can be rendered on maps
+
+annotations can be queried spatially
+
+🧠 4. COMPUTER VISION TASKS
+Internal Engine: Vision Engine
+4.1 Task Abstraction
+
+All CV tasks conform to a common interface:
+
+class VisionTask:
+    load_model()
+    preprocess()
+    infer()
+    postprocess()
+
+
+This allows:
+
+swapping models
+
+running locally or remotely
+
+ONNX standardization
+
+4.2 Change Detection
+
+Implemented as:
+
+image pair alignment
+
+pixel or feature comparison
+
+threshold-based or learned model
+
+Outputs:
+
+change masks
+
+area statistics
+
+geo-linked diffs
+
+🧩 5. MODEL HUB & MODEL MANAGEMENT
+Internal Engine: Model Manager
+5.1 Model Registry
+
+Models are stored as:
+
+models/
+ ├─ model.onnx
+ ├─ config.json
+ ├─ metrics.json
+ └─ runtime.json
+
+runtime.json specifies:
+
+CPU / GPU
+
+memory requirement
+
+supported tasks
+
+5.2 Hugging Face Integration
+
+Metadata fetched via API
+
+Model downloaded on demand
+
+Converted to ONNX if needed
+
+Cached locally
+
+No always-online dependency.
+
+🏋️ 6. TRAINING & EVALUATION ENGINE
+Internal Engine: Training Engine
+6.1 Training Flow
+Dataset
+ → Config
+ → Trainer
+ → Checkpoints
+ → Metrics
+ → Exportable Model
+
+
+Training runs in a separate process
+
+UI polls progress
+
+Logs streamed asynchronously
+
+6.2 Local vs Remote Training
+
+Same config object is used.
+
+Only difference:
+
+execution endpoint
+
+This prevents logic duplication.
+
+🔍 7. INFERENCE & TESTING STUDIO
+Internal Engine: Inference Engine
+7.1 Execution Flow
+Input
+ → Preprocess
+ → Model Runtime (ONNX)
+ → Postprocess
+ → Visualization
+
+
+Inference never blocks UI.
+
+7.2 Geo-Overlay Inference
+
+Predictions mapped back to coordinates
+
+Rendered as vector layers
+
+Toggleable in UI
+
+🌍 8. SPATIAL VISION LAB
+Internal Engine: Spatial Engine
+
+This is a core differentiator.
+
+8.1 Spatial Data Model
+
+Uses:
+
+EPSG coordinate systems
+
+GeoJSON
+
+GeoTIFF
+
+R-tree indexing
+
+All spatial assets share:
+
+{
+  "crs": "EPSG:4326",
+  "bounds": [...],
+  "resolution": ...
+}
+
+8.2 Vision-on-Maps
+
+Maps treated as tiled images
+
+CV models run on tiles
+
+Outputs merged into spatial layers
+
+8.3 Temporal Mapping
+
+Same spatial region, different timestamps
+
+Enables before/after analysis
+
+Supports animated diffs
+
+🧱 9. 3D DIGITAL ENVIRONMENT & RECONSTRUCTION
+Internal Engine: 3D Engine
+9.1 Local 3D (Basic)
+
+OpenMVG / COLMAP
+
+Low-resolution
+
+CPU-based
+
+Small datasets only
+
+9.2 Online 3D (Advanced – Your Engine)
+
+Heavy SfM/SLAM
+
+High-res
+
+GPU accelerated
+
+Optional
+
+User explicitly opts in.
+
+9.3 3D + CV Integration
+
+Detections projected into 3D space
+
+Measurements calculated in world units
+
+Supports mining volumes, aviation inspection
+
+🏭 10. INDUSTRY PROFILES (BEHAVIORAL CONFIGS)
+
+Industry profiles do not change code, they:
+
+enable / disable features
+
+enforce defaults
+
+apply constraints
+
+Example:
+
+Defense → no cloud allowed
+
+Mining → volume tools enabled
+
+Health → anonymization enforced
+
+🔁 11. EXPORT & INTEROPERABILITY
+
+Exports are generated by:
+
+reading internal registries
+
+converting formats
+
+preserving metadata
+
+No manual user stitching.
+
+⚙️ 12. PERFORMANCE & OFFLOADING
+Smart Task Orchestrator
+
+Before execution:
+
+hardware assessed
+
+dataset size checked
+
+user plan checked
+
+Decision:
+
+local
+
+remote
+
+hybrid
+
+🌐 13. SECURITY & SCALABILITY
+
+Offline-first by default
+
+Optional encryption at rest
+
+No forced cloud sync
+
+Enterprise self-hostable engines
+
+🔥 FINAL ENGINEERING PRINCIPLE (THIS IS CRITICAL)
+
+Singularity Vision is not a “tool with features”.
+It is a system of coordinated engines with strict boundaries.
+
+If engineers respect:
+
+engine isolation
+
+async execution
+
+local-first defaults
+
+This platform will scale for years.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PROJECT & WORKSPACE SYSTEM — DETAILED TECHNICAL SPECIFICATION
+
+Goal: Each project is a self-contained, fully versioned workspace that can handle datasets, models, experiments, spatial data, and outputs, while minimizing memory usage and supporting offline/hybrid modes.
+
+A. Project Directory Structure (Technical Schema)
+
+Every project is a directory on disk, with strict subfolders and manifest files. This ensures portability, reproducibility, and easy syncing.
+
+project_root/
+ ├─ project.json               # Core metadata & configuration
+ ├─ datasets/                  # Raw + processed datasets
+ │    ├─ images/
+ │    ├─ videos/
+ │    ├─ geo/
+ │    └─ tiled/
+ ├─ annotations/               # All annotation files
+ │    ├─ images/
+ │    ├─ video_frames/
+ │    └─ geo_annotations/
+ ├─ models/                    # Saved / imported models
+ │    ├─ onnx/
+ │    ├─ pytorch/
+ │    └─ tensorflow/
+ ├─ experiments/               # Training & evaluation experiments
+ │    ├─ experiment_<uuid>/
+ │    │    ├─ config.json
+ │    │    ├─ checkpoints/
+ │    │    ├─ logs/
+ │    │    └─ metrics.json
+ ├─ spatial/                   # Spatial vision / mapping assets
+ │    ├─ maps/
+ │    ├─ geojson/
+ │    └─ reconstructions/
+ ├─ outputs/                   # Inference outputs, visualizations
+ │    ├─ images/
+ │    ├─ videos/
+ │    └─ reports/
+ └─ logs/                      # Application & engine logs
+
+
+Notes:
+
+Lazy-loading is critical: Datasets, models, and experiments are only loaded when accessed to save memory.
+
+Portable: Entire project can be exported/imported as a zip with manifest.
+
+Immutable Experiments: Once an experiment is finished, its snapshot (config + checkpoints + metrics) is preserved.
+
+B. project.json — Core Metadata
+
+This is the source of truth for a project.
+It drives the UI, engines, and workflows.
+
+Example:
+
+{
+  "project_id": "uuid",
+  "name": "Mining Site Monitoring",
+  "industry_profile": "mining",
+  "task_types": ["detection", "mapping"],
+  "execution_mode": "hybrid",        # local | hybrid | remote
+  "security_level": "offline_allowed",
+  "created_at": "2026-01-11T15:00:00Z",
+  "last_opened": "2026-01-11T16:30:00Z",
+  "engine_versions": {
+      "dataset_engine": "v1.0.2",
+      "vision_engine": "v2.1.0",
+      "spatial_engine": "v1.5.0",
+      "3d_engine": "v0.9.3"
+  },
+  "tags": ["urban", "satellite", "defense"],
+  "user_settings": {
+      "default_model": "yolo_v8",
+      "default_output_format": "GeoJSON"
+  }
+}
+
+
+Key Points:
+
+execution_mode determines if tasks default to local/hybrid/remote.
+
+security_level defines what is allowed: offline, online, cloud storage.
+
+engine_versions ensures reproducibility: which engine version produced which result.
+
+tags allow filtering/searching projects inside the platform.
+
+user_settings store project-specific preferences (like default model, inference batch size, display units).
+
+C. Project Behaviors
+1. Lazy Loading
+
+Only project.json is loaded on open.
+
+Datasets, models, experiments, and outputs are loaded on demand.
+
+Reduces memory footprint and improves startup time.
+
+Example workflow:
+
+User opens project → Electron UI displays metadata + dataset stats.
+
+User clicks dataset → Python engine loads dataset (tiles, annotations) in memory.
+
+User runs inference → only required model loaded into RAM.
+
+2. Versioned Datasets & Models
+
+Every dataset can have versions:
+
+Original raw import
+
+Augmented version
+
+Preprocessed / tiled version
+
+Models are versioned using:
+
+uuid
+
+Engine version
+
+Training date
+
+Purpose: Prevents overwriting important work and ensures reproducibility.
+
+3. Experiments (Immutable Snapshots)
+
+Each training run is an immutable snapshot.
+
+Contains:
+
+Configuration (config.json)
+
+Model checkpoints
+
+Logs
+
+Metrics (metrics.json)
+
+Experiment naming: experiment_<uuid> or user-friendly timestamp.
+
+UI shows experiments in chronological order.
+
+Experiments cannot overwrite each other, but can fork from previous snapshots.
+
+4. Project Export / Import
+
+Full export includes:
+
+project.json
+
+datasets
+
+annotations
+
+models
+
+experiments
+
+spatial assets
+
+Export generates a manifest file for integrity checks:
+
+{
+  "files": [
+    {"path": "datasets/images/img001.jpg", "hash": "abc123"},
+    {"path": "models/onnx/model.onnx", "hash": "def456"}
+  ],
+  "project_version": "1.0.0"
+}
+
+
+Import verifies hashes to ensure no corruption.
+
+Export is zip-based for portability, including cross-platform use.
+
+5. Project Isolation
+
+Projects are fully self-contained:
+
+No shared datasets/models unless explicitly linked
+
+Avoids accidental overwriting
+
+Allows multiple projects per machine safely
+
+Engines are aware of project paths, never write outside project folder by default.
+
+6. Project Metadata & Engines Interaction
+
+On project load:
+
+UI reads project.json
+
+Registers available engines and versions
+
+Checks execution mode vs hardware
+
+Engines read project paths, dataset registry, and model registry
+
+Any outputs (inference, experiments, spatial reconstructions) are saved inside project folder for reproducibility.
+
+7. Cross-Platform Storage Considerations
+
+File paths stored as relative paths to project_root:
+
+datasets/images/img001.jpg → relative
+
+Prevents absolute path issues on Windows / macOS / Linux
+
+Optional symbolic links for very large datasets:
+
+e.g., if user wants to store videos externally, still register in project.
+
+8. Security & Access Control
+
+Project folder can be encrypted for sensitive industries (defense, health)
+
+Execution mode can enforce:
+
+Offline-only: block network calls
+
+Hybrid: allow cloud engines for heavy tasks
+
+Audit logs written per project:
+
+Who ran inference
+
+When experiments were trained
+
+Remote vs local execution
+
+9. Workspace UI Features (Electron)
+
+Project dashboard shows:
+
+Name, task type, industry, creation date
+
+Dataset summary (#images, #videos, geo coverage)
+
+Model summary (local & hub)
+
+Experiment history
+
+Quick actions:
+
+Open dataset / annotation / spatial tab
+
+Start training / inference
+
+Export project
+
+Drag-and-drop support for datasets/models
+
+10. Hybrid / Remote Mode Behavior
+
+Projects can exist entirely locally, but optionally use:
+
+Remote model hub for downloading models
+
+Remote training engines for heavy tasks
+
+Online 2D → 3D engine
+
+Project keeps metadata of remote tasks in experiments/ folder for reproducibility.
+
+✅ Key Takeaways for Developers
+
+Project = self-contained, lazy-loaded, versioned workspace
+
+Engines interact via project folder paths & metadata
+
+Datasets, annotations, experiments, models are isolated & versioned
+
+Exports = portable + hash-verified bundles
+
+Supports offline-first, hybrid, remote execution
+
+Designed for large datasets, cross-platform, and sensitive industries
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DATASET & DATA MANAGEMENT ENGINE — DETAILED TECHNICAL SPEC
+
+Goal: Handle all types of datasets efficiently, support large images/videos, allow spatial/geospatial operations, version everything, and keep memory usage low.
+
+Architecture Principle:
+
+The Dataset Engine runs as a background Python service. The Electron frontend communicates via async IPC / gRPC / REST.
+Heavy operations like tiling, parsing, and indexing are offloaded to worker threads or processes.
+
+A. Supported Input Types & Technical Handling
+Input Type	How Engine Handles It	Notes / Libraries
+Images	Copied or referenced; stored in datasets/images/	Pillow, OpenCV
+Video	Frames extracted on ingest or on-demand	OpenCV, FFmpeg; store frame metadata separately
+Satellite Imagery	Large images automatically tiled	Rasterio, GDAL
+GeoTIFF	Parsed and linked to spatial metadata	GDAL, Rasterio
+CSV / Tabular Spatial Data	Parsed; stored in spatial index	Pandas, Shapely, GeoPandas
+B. Data Ingestion Pipeline
+
+Pipeline Overview:
+
+Raw Input
+  → Validation
+  → Metadata Extraction
+  → Optional Tiling
+  → Indexing
+  → Dataset Registration
+
+1. Validation
+
+Check supported file formats
+
+Check for missing frames / corrupted images
+
+Validate CSV / GeoTIFF headers
+
+Generate ingestion log with warnings/errors
+
+2. Metadata Extraction
+
+For each asset, store:
+
+{
+  "id": "uuid",
+  "file_path": "datasets/images/img001.jpg",
+  "type": "image/video/frame",
+  "size": [width, height],
+  "duration": null,        # for video
+  "frame_index": null,     # for video frames
+  "timestamp": "...",
+  "geo_bounds": {          # optional
+      "lat_min": ...,
+      "lat_max": ...,
+      "lon_min": ...,
+      "lon_max": ...
+  },
+  "source": "drone/satellite/user"
+}
+
+
+Metadata stored in SQLite / DuckDB
+
+Enables fast querying without loading raw files
+
+3. Optional Tiling (Critical for Large Images / Maps)
+
+Images larger than threshold (e.g., 2048x2048) are split into tiles
+
+Tile metadata keeps:
+
+Original coordinates
+
+Tile coordinates
+
+Tile index
+
+Example structure:
+
+original_image_id: "img001"
+tiles:
+  - tile_1: {x0, y0, width, height, lat/lon bounds}
+  - tile_2: ...
+
+
+Tiling allows:
+
+Large satellite images
+
+Map overlays
+
+Memory-efficient CV training
+
+4. Indexing
+
+All assets are registered in the Dataset Registry
+
+Index contains:
+
+file path
+
+asset type (image/video/frame)
+
+timestamp
+
+spatial bounds (lat/lon)
+
+class labels (if annotated)
+
+Storage:
+
+SQLite / DuckDB table dataset_index
+
+Optional R-tree for geo-spatial queries
+
+Example schema:
+
+CREATE TABLE dataset_index (
+    asset_id TEXT PRIMARY KEY,
+    file_path TEXT,
+    type TEXT,
+    width INT,
+    height INT,
+    timestamp DATETIME,
+    lat_min REAL,
+    lat_max REAL,
+    lon_min REAL,
+    lon_max REAL,
+    labels TEXT
+);
+
+C. Dataset Versioning & Snapshots
+
+Purpose: Prevent accidental overwrites, allow experiments to reproduce results.
+
+1. Versioning Workflow
+
+Ingest / Update Dataset
+
+Generate SHA256 hash for each asset
+
+Compare with previous version → identify changes
+
+Save diff record (added / removed / modified files)
+
+Assign dataset version ID (v1.0, v1.1, uuid)
+
+2. Snapshot Model
+
+Each snapshot is a read-only reference:
+
+Original files remain untouched
+
+Diffs stored in JSON:
+
+{
+  "snapshot_id": "uuid",
+  "timestamp": "...",
+  "added": ["img005.jpg", "img006.jpg"],
+  "removed": ["img003.jpg"],
+  "modified": []
+}
+
+
+Snapshots allow rollback:
+
+User can revert to any previous version
+
+Required for experiments reproducibility
+
+D. Lazy Loading / Memory Management
+
+Only load:
+
+Tile metadata / indices
+
+Dataset statistics
+
+Actual images/videos are read on demand
+
+Enables handling:
+
+Very large satellite datasets
+
+High-res video sequences
+
+Supports chunked processing for CV tasks
+
+E. Geo-Spatial Awareness
+1. Geo-indexing
+
+Assets with coordinates → registered in R-tree
+
+Enables:
+
+Bounding queries (all assets within lat/lon box)
+
+Fast map rendering in UI
+
+Overlay CV results on spatial maps
+
+2. Metadata Link
+
+Each frame or tile stores:
+
+lat_min, lat_max, lon_min, lon_max
+
+Optional altitude
+
+Optional timestamp (for temporal analysis)
+
+F. Video Handling
+
+Video Ingestion Options:
+
+Full-frame extraction at N FPS → stored as individual frames
+
+Lazy extraction → frames extracted only when needed
+
+Metadata:
+
+frame_index
+
+timestamp
+
+Optional GPS if drone footage
+
+Index stored in dataset registry
+
+G. Dataset Statistics
+
+Automatically compute:
+
+assets (images, frames, videos)
+
+Class distribution
+
+Spatial coverage bounds
+
+Average resolution / aspect ratio
+
+Time-span for temporal datasets
+
+Stored in dataset metadata JSON for quick dashboard rendering
+
+H. Data Pipeline Integration
+
+The Dataset Engine is the first step in all CV pipelines:
+
+User Action → Dataset Engine → Vision Engine → Training / Inference → Outputs Engine
+
+
+All CV tasks query dataset registry, not filesystem
+
+Allows consistent behavior across local / remote / hybrid mode
+
+I. Cross-Platform Considerations
+
+Relative paths only
+
+Supports large datasets on Windows / Linux / Mac
+
+Optional symbolic links for huge video/image datasets
+
+J. Optional Online Integration
+
+Sync datasets or versions with remote repository (Hugging Face / Enterprise)
+
+Controlled via project metadata and security settings
+
+Offline-first remains priority; online is optional for heavy datasets or backup
+
+✅ Key Takeaways
+
+Dataset Engine is a background Python service.
+
+Supports images, video, satellite, GeoTIFF, CSV.
+
+Uses lazy loading + tiling + spatial indexing for efficiency.
+
+Maintains dataset registry in SQLite / DuckDB.
+
+Implements full versioning / snapshots / diff tracking.
+
+Integrates geo-awareness (coordinates, temporal data, R-tree spatial queries).
+
+Feeds CV engines via standardized API, never raw filesystem paths.
+
+Handles very large datasets without blocking memory or UI.
+
+Optional online integration for heavy-duty or enterprise datasets.
+
+
+
+
+
+
+ANNOTATION & LABELING SYSTEM — DETAILED TECHNICAL SPEC
+
+Goal: Allow users to create, manage, and query annotations across images, video frames, and geospatial data, while keeping data separate from source files, versioned, and queryable.
+
+Architecture Principle:
+
+Annotation Engine runs as a Python backend service.
+Electron frontend sends geometry, label, and metadata via IPC / REST / gRPC.
+Engine stores annotations in a central registry (SQLite / DuckDB / JSON snapshots).
+
+A. Annotation Storage Model
+
+Core Principles:
+
+Annotations are decoupled from images/videos.
+
+Raw images/videos are never modified.
+
+Annotations are stored as metadata JSON, referencing image_id or frame_id.
+
+Annotation JSON Schema:
+
+{
+  "annotation_id": "uuid",
+  "image_id": "uuid",
+  "frame_index": null,  # optional for video
+  "geometry": {
+    "type": "bounding_box",  # "polygon", "segmentation_mask", "keypoints", etc.
+    "coordinates": [x, y, width, height]  # or list of points for polygons
+  },
+  "label": "vehicle",
+  "confidence": null,  # optional, used for AI-assisted labeling
+  "geo_ref": {          # optional
+      "lat_min": null,
+      "lat_max": null,
+      "lon_min": null,
+      "lon_max": null,
+      "altitude": null
+  },
+  "metadata": {
+      "created_by": "user_id",
+      "created_at": "...",
+      "updated_at": "...",
+      "version": "1.0"
+  }
+}
+
+
+Supported Geometry Types:
+
+Bounding boxes (x, y, width, height)
+
+Polygons (list of points)
+
+Polylines (for roads, rivers, etc.)
+
+Segmentation masks (reference mask file)
+
+Temporal segments (start/end frame for video)
+
+Keypoints / pose landmarks (phase 2)
+
+Geo-Awareness:
+
+If an image or frame has geo metadata (lat/lon), the annotation automatically inherits it.
+
+Geo metadata allows:
+
+Rendering on maps
+
+Spatial queries
+
+Calculating areas, distances, or overlaps
+
+B. Annotation UI → Backend Flow
+
+Step-by-Step Flow:
+
+User Interaction in Electron UI
+
+Draw bounding box, polygon, keypoints, or temporal segment.
+
+Select label from a project-defined label set.
+
+Optional: assign confidence (manual or from AI suggestion).
+
+Frontend Sends Annotation to Backend
+
+IPC / gRPC call includes:
+
+image_id / frame_index
+
+geometry
+
+label
+
+Optional metadata (confidence, geo_ref, timestamp)
+
+Backend Validation
+
+Ensure geometry is within image/frame bounds.
+
+Ensure label exists in project label set.
+
+Ensure temporal segment is within video frame range.
+
+For geo-aware annotations:
+
+Validate lat/lon bounds are inside image bounds if spatial reference exists.
+
+Annotation Storage
+
+Insert into annotations/ folder or central registry:
+
+SQLite table annotations
+
+Optional JSON per asset (for offline sync)
+
+Example SQLite schema:
+
+CREATE TABLE annotations (
+    annotation_id TEXT PRIMARY KEY,
+    project_id TEXT,
+    image_id TEXT,
+    frame_index INT,
+    geometry_type TEXT,
+    geometry JSON,
+    label TEXT,
+    confidence REAL,
+    lat_min REAL,
+    lat_max REAL,
+    lon_min REAL,
+    lon_max REAL,
+    altitude REAL,
+    created_by TEXT,
+    created_at DATETIME,
+    updated_at DATETIME,
+    version TEXT
+);
+
+
+Dataset Index Update
+
+After saving, update dataset metadata:
+
+Class count
+
+Number of annotations
+
+Coverage statistics (spatial / temporal)
+
+Ensures dashboard displays real-time stats.
+
+C. Geo-Aware Annotations (Spatial Integration)
+
+Key Behavior:
+
+If asset has geo info (lat/lon/altitude):
+
+Convert pixel coordinates → geospatial coordinates
+
+Store both:
+
+geometry_px: local image coordinates
+
+geometry_geo: lat/lon bounds
+
+Enables:
+
+Rendering on interactive maps in Electron UI
+
+Spatial filtering (select all objects in this region)
+
+Integration with Spatial Vision Lab (mapping module)
+
+Distance/area calculations for CV outputs
+
+Implementation Notes:
+
+Use GDAL / Rasterio to map image pixels → lat/lon
+
+Support for tiles:
+
+Each tile inherits geo_bounds from parent image
+
+Annotations in tiles maintain global coordinates
+
+D. Annotation Versioning & History
+
+Every annotation has version metadata.
+
+When user edits an annotation:
+
+Copy previous version
+
+Increment version counter (1.0 → 1.1)
+
+Keep audit log for:
+
+User
+
+Timestamp
+
+Action type (create/update/delete)
+
+Allows:
+
+Rollback to previous versions
+
+Reproducibility for experiments
+
+E. AI-Assisted Annotation (Future / Phase 2)
+
+Backend can suggest annotations:
+
+Model outputs (object detection, segmentation)
+
+Stored as annotations with confidence score
+
+User can:
+
+Accept
+
+Reject
+
+Modify
+
+Integrates directly into annotation registry.
+
+F. Annotation Querying & Retrieval
+Queries Supported:
+
+By image/frame
+
+By label/class
+
+By spatial bounds (lat/lon / tile)
+
+By temporal range (video frame start/end)
+
+By experiment / snapshot version
+
+Returns annotations JSON, ready for:
+
+Training CV models
+
+Rendering in UI
+
+Spatial analysis
+
+Export (COCO, YOLO, GeoJSON)
+
+G. Export & Interoperability
+
+Supports standard annotation formats:
+
+YOLO (txt)
+
+COCO (JSON)
+
+Pascal VOC (XML)
+
+GeoJSON (for mapping)
+
+Exports can be filtered by version, spatial bounds, class, or time.
+
+Enables integration with:
+
+Vision Engine (training/inference)
+
+GIS tools
+
+3D mapping engine
+
+H. Performance & Scaling
+
+Large datasets / videos:
+
+Use lazy loading: only load annotations for visible frame / tile
+
+Spatial indexing (R-tree) for geo queries
+
+Concurrency:
+
+Backend can handle multiple annotation requests asynchronously
+
+Offline mode:
+
+All annotations stored locally
+
+Optional sync to remote engines / collaboration layer
+
+I. Developer Notes
+
+Frontend → Backend Protocol
+
+Electron sends annotation as JSON
+
+Backend validates and stores
+
+Backend returns updated stats / success message
+
+Annotation Engine Responsibilities
+
+Validation
+
+Versioning
+
+Spatial conversion
+
+Audit logging
+
+Snapshot / rollback
+
+Integration Points
+
+Vision Engine: reads annotations for training/inference
+
+Dataset Engine: updates dataset stats
+
+Spatial Engine: converts geo-coordinates
+
+UI: renders annotations dynamically on images, video, or maps
+
+✅ Key Takeaways
+
+Annotations are decoupled, versioned, and spatially aware.
+
+Supports images, video frames, polygons, bounding boxes, temporal segments, geo-coordinates.
+
+Backend handles validation, storage, indexing, and spatial conversions.
+
+Lazy loading + versioning ensures scalability and reproducibility.
+
+Fully exportable to all CV and GIS formats.
+
+Integrates with dataset, vision, and spatial engines.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+COMPUTER VISION TASKS — DETAILED TECHNICAL SPEC
+
+Goal: Enable robust CV operations (classification, detection, segmentation, tracking, and change detection) across images, video, and spatial data. All tasks are engineered for modularity, reproducibility, and integration with other engines.
+
+Architecture Principle:
+
+The Vision Engine is a Python service handling training, inference, and evaluation.
+Electron frontend interacts via async RPC / REST / IPC.
+The engine can run locally (CPU/GPU) or remotely (online accelerator, e.g., Hugging Face / cloud).
+
+A. Task Abstraction
+
+All CV tasks implement a common interface, making pipelines consistent:
+
+class VisionTask:
+    def __init__(self, model_path: str, device: str = "cpu"):
+        self.model_path = model_path
+        self.device = device
+        self.model = None
+    
+    def load_model(self):
+        """
+        Load ONNX / PyTorch / TensorFlow model.
+        Handles device allocation (CPU/GPU).
+        """
+        pass
+
+    def preprocess(self, data):
+        """
+        Convert input data to model-compatible tensors.
+        Handles:
+            - resizing / padding
+            - normalization
+            - tiling for large images
+            - geospatial metadata if needed
+        """
+        pass
+
+    def infer(self, preprocessed_data):
+        """
+        Run model inference.
+        Supports:
+            - batch inference
+            - live video stream
+            - spatially-referenced tiles
+        """
+        pass
+
+    def postprocess(self, raw_outputs):
+        """
+        Convert raw model outputs to:
+            - bounding boxes
+            - segmentation masks
+            - labels / confidence
+            - spatial coordinates (geo-ref)
+        """
+        pass
+
+
+Benefits:
+
+Unified interface for all tasks
+
+Swap models easily (custom / pretrained)
+
+Supports ONNX standardization for cross-framework compatibility
+
+Works with both local and online engines
+
+B. Change Detection (Expanded)
+
+Change detection is critical for mapping, defense, mining, and industrial monitoring.
+
+1. Concept
+
+Detect differences between two or more temporally-separated images, optionally with geo-awareness.
+
+Inputs:
+
+image_1, image_2 (or more)
+
+Optional geo-metadata for alignment
+
+Optional video sequence (frame-by-frame)
+
+Outputs:
+
+Change mask (binary or multi-class)
+
+Area statistics (e.g., hectares of deforestation)
+
+Geo-linked differences (GeoJSON / GeoTIFF overlays)
+
+Confidence / probability per pixel (if learned)
+
+2. Pipeline
+
+Step 1: Preprocessing
+
+Align images: Ensure images have same size and coordinate system.
+
+Use image registration:
+
+Keypoint-based (SIFT / ORB / SuperPoint)
+
+Feature matching → affine/homography transform
+
+Optional: geo-coordinates for geospatial alignment
+
+Normalize: Resize / scale / normalize to model input
+
+Tile large images: For high-res maps or satellite imagery
+
+Step 2: Inference / Comparison
+Two main strategies:
+
+A. Pixel / Feature Difference
+
+diff = abs(image_1 - image_2)
+mask = diff > threshold
+
+
+Simple, fast
+
+Works for illumination-normalized images
+
+Good for MVP / Level 1
+
+B. Learned Change Detection Model
+
+Input: stacked images ([img1, img2])
+
+Architecture: CNN / UNet / Siamese network
+
+Output: per-pixel probability map of change
+
+Advantages:
+
+Robust to illumination, weather, seasonal differences
+
+Can classify type of change
+
+Step 3: Postprocessing
+
+Threshold probability map → binary mask
+
+Optional morphological operations:
+
+Remove noise
+
+Close gaps
+
+Calculate change statistics:
+
+Area of change (pixels → real-world units using geo_ref)
+
+Count of objects changed (if detection integrated)
+
+Save geo-linked overlay:
+
+GeoJSON polygons
+
+GeoTIFF raster mask
+
+Optional PLY for 3D environments
+
+3. Technical Implementation Notes
+
+Image Alignment
+
+# Example: ORB + RANSAC alignment
+import cv2
+orb = cv2.ORB_create()
+kp1, des1 = orb.detectAndCompute(img1, None)
+kp2, des2 = orb.detectAndCompute(img2, None)
+matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+matches = matcher.match(des1, des2)
+# Compute homography
+
+
+Tile Handling
+
+Large images split into tiles
+
+Process each tile → generate tile-level mask
+
+Merge masks → global change mask
+
+Geo-Aware Outputs
+
+Pixel coordinates → geo-coordinates
+
+Overlay mask on map or satellite imagery
+
+Integrates with Spatial Engine
+
+4. Optional Enhancements (Phase 2)
+
+Multi-temporal analysis: More than 2 images
+
+Weighted change scoring: Areas with higher confidence flagged
+
+Integration with 3D Engine: Changes mapped to 3D point clouds
+
+Batch processing for large datasets: Parallelized across tiles
+
+5. Integration with Other Engines
+Engine	Interaction
+Dataset Engine	Pulls tiles/images; provides geo metadata
+Spatial Engine	Converts pixel change mask → geo-coordinates; overlays on map
+Annotation Engine	Optionally auto-annotates changes as bounding boxes/polygons
+3D Engine	Projects change masks into 3D models for volumetric analysis
+UI / Electron	Displays interactive map/video overlays; supports toggling masks, timeframes
+6. Outputs
+
+Change Mask Image (PNG / TIFF)
+
+GeoJSON Polygons (areas changed)
+
+Area Statistics JSON:
+
+{
+  "changed_area_m2": 12500,
+  "percent_change": 0.23,
+  "timestamp_pair": ["2026-01-01", "2026-01-10"]
+}
+
+
+Optional: 3D Overlay (PLY/OBJ)
+
+✅ Key Takeaways for Developers
+
+Task interface ensures modularity: load_model, preprocess, infer, postprocess.
+
+Change Detection is a pipeline:
+
+Alignment → Comparison / Model → Postprocessing → Geo-linked output
+
+Supports pixel-based and learned methods.
+
+Outputs include binary masks, statistics, and geospatial overlays.
+
+Fully integrated with Spatial & 3D Engines.
+
+Tiles + lazy loading = memory-efficient processing.
+
+Extensible for multi-temporal and volumetric analysis.
+
+
+
+
+
+
+
+MODEL HUB & MODEL MANAGEMENT — TECHNICAL SPEC
+
+Goal: Provide a centralized, versioned, and extensible model management system for all CV tasks while supporting local-first operation and optional remote fetching.
+
+Architecture Principle:
+
+The Model Manager is a Python backend service.
+Electron frontend queries it for model browsing, selection, downloading, and execution.
+Models are ONNX-first for cross-framework compatibility.
+
+A. Model Registry Structure
+
+Local Model Directory Structure:
+
+models/
+ ├─ <model_id>/
+ │    ├─ model.onnx         # Main model file
+ │    ├─ config.json        # Model config (architecture, input/output)
+ │    ├─ metrics.json       # Accuracy, mAP, inference speed
+ │    └─ runtime.json       # Runtime requirements (CPU/GPU, memory, supported tasks)
+
+
+Example config.json:
+
+{
+  "model_name": "yolov8_mining",
+  "task_type": ["detection"],
+  "input_shape": [640, 640, 3],
+  "output_format": "bbox",
+  "preprocessing": {
+    "resize": true,
+    "normalize": true,
+    "tile_processing": true
+  }
+}
+
+
+Example metrics.json:
+
+{
+  "accuracy": 0.91,
+  "mAP50": 0.88,
+  "inference_fps": 25,
+  "device": "gpu"
+}
+
+
+Example runtime.json:
+
+{
+  "device": ["cpu", "gpu"],
+  "memory_MB": 2048,
+  "supports_tasks": ["detection", "segmentation"]
+}
+
+
+Key Principles:
+
+Each model is self-contained.
+
+Models are versioned: e.g., v1.0, v1.1.
+
+ONNX standardization ensures interchangeable across Vision Engine tasks.
+
+Runtime metadata allows Electron frontend to suggest compatible models for current hardware.
+
+B. Model Loading & Execution
+
+Load Model
+
+from onnxruntime import InferenceSession
+
+def load_model(model_path, device="cpu"):
+    session_options = ...
+    session = InferenceSession(model_path, sess_options=session_options)
+    return session
+
+
+Supports CPU/GPU selection
+
+Lazy load models when user selects or triggers a task
+
+Can load multiple models in parallel (for multi-task pipelines)
+
+Task Association
+
+Each model has supported_tasks in runtime.json
+
+Vision Engine queries compatible models before inference:
+
+compatible_models = [m for m in registry if "detection" in m.supported_tasks]
+
+
+Preprocessing Metadata
+
+config.json tells Vision Engine how to:
+
+Resize / pad
+
+Normalize
+
+Tile large images
+
+This ensures models can run without manual intervention.
+
+C. Hugging Face / Remote Model Integration
+
+Workflow:
+
+Query API for model metadata
+
+Model name, task type, weights format, license
+
+Download weights on demand
+
+Optional conversion to ONNX if model is PyTorch/TensorFlow
+
+Cached locally in models/<model_id>/
+
+Store metadata
+
+Auto-generate config.json, metrics.json, runtime.json
+
+Fallback to local-first
+
+Users can continue offline if model is cached
+
+No permanent online dependency
+
+Benefits:
+
+Users get latest pretrained models without bloating the app.
+
+Supports custom enterprise models if Hugging Face is not allowed.
+
+Optional pro / enterprise workflow: fetch large or high-accuracy models from cloud server.
+
+D. Versioning & Snapshotting
+
+Each model has semantic versioning (v1.0, v1.1)
+
+Changes tracked in:
+
+Architecture
+
+Input/output
+
+Performance metrics
+
+Developers can roll back to previous model for experiments
+
+Optional experiment snapshot:
+
+Vision Engine keeps track of which model + config was used per experiment
+
+E. Model Search & Filtering
+
+Frontend provides:
+
+Task filter: detection, segmentation, OCR, change detection
+
+Device compatibility: CPU/GPU
+
+Industry presets: mining, defense, sports
+
+Metrics threshold: e.g., mAP >= 0.85
+
+Backend handles:
+
+Querying registry
+
+Returning model metadata + selection for execution
+
+F. Model Execution Integration
+
+Vision Engine
+
+Pulls compatible model from Model Hub
+
+Loads preprocessing pipeline (config.json)
+
+Runs inference
+
+Returns structured output (bbox, mask, geo-overlay)
+
+Annotation Engine
+
+Optionally saves AI-predicted annotations
+
+Confidence scores stored for review
+
+Spatial Engine
+
+Converts outputs to geo-aware formats (GeoJSON, GeoTIFF)
+
+Integrates with maps & 3D engine
+
+G. Caching & Local Optimization
+
+Lazy load: don’t load all models at startup
+
+Cache ONNX converted models
+
+Eviction policy: LRU or size-based cache
+
+Optional online update: Only fetch if newer version exists
+
+H. Developer Notes / API Interface
+# Model Manager API (Python backend)
+class ModelManager:
+    def list_models(task_type=None, device=None, min_mAP=None):
+        pass
+
+    def download_model(model_id, version="latest"):
+        pass
+
+    def load_model(model_id, device="cpu"):
+        pass
+
+    def get_model_metadata(model_id):
+        pass
+
+
+Electron Integration:
+
+Display model library
+
+Filter by task, industry, performance
+
+Allow one-click download & load
+
+Show compatibility info and metrics
+
+✅ Key Takeaways
+
+Local-first + optional online fetching
+
+ONNX standardization → cross-framework
+
+Versioned models → reproducibility
+
+Metadata-driven → preprocessing, runtime, task compatibility
+
+Integrates with Vision, Annotation, Spatial, 3D Engines
+
+Cache / lazy load → avoids bloating user’s PC
+
+Supports AI-assisted labeling and auto-selection
+
+
+
+
+
+
+
+TRAINING & EVALUATION ENGINE — TECHNICAL SPEC
+
+Goal: Provide a robust, reproducible, and scalable training system for all CV tasks, tightly integrated with dataset, model, and spatial engines.
+
+Architecture Principle:
+
+The Training Engine runs as a separate Python process/service, fully decoupled from the Electron UI.
+UI interacts asynchronously via IPC / WebSocket / REST.
+Supports local CPU/GPU training and optional remote/cloud execution with identical config structures.
+
+A. Training Flow — Step by Step
+Dataset
+ → Config
+ → Trainer
+ → Checkpoints
+ → Metrics
+ → Exportable Model
+
+1. Dataset
+
+Pulls preprocessed dataset from Dataset Engine
+
+Applies on-the-fly augmentation if enabled (rotation, flip, scaling, color jitter)
+
+For spatial or geo-aware datasets:
+
+Tiles images
+
+Links annotations to geo-coordinates
+
+Lazy-load tiles to save memory
+
+2. Config
+
+Each training run uses a single config object, stored in JSON / YAML
+
+Config contains:
+
+{
+    "model_id": "yolov8_mining_v1",
+    "task": "detection",
+    "dataset_id": "dataset_001",
+    "batch_size": 8,
+    "epochs": 50,
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "device": "gpu",
+    "augmentation": ["flip", "rotate"],
+    "checkpoint_interval": 5,
+    "metrics": ["mAP", "accuracy", "loss"]
+}
+
+
+Same config works for local and remote training
+
+Facilitates experiment reproducibility
+
+3. Trainer
+
+Runs as isolated Python process:
+
+Protects UI from blocking
+
+Handles GPU memory allocation
+
+Can be paused/resumed
+
+Core logic:
+
+for epoch in range(config.epochs):
+    for batch in dataset:
+        x, y = preprocess(batch)
+        predictions = model(x)
+        loss = compute_loss(predictions, y)
+        optimizer.step(loss)
+    if epoch % checkpoint_interval == 0:
+        save_checkpoint(model, epoch)
+    update_metrics_dashboard(epoch, loss, predictions)
+
+
+Supports:
+
+Mixed precision (FP16)
+
+Multi-GPU (if available)
+
+Early stopping (configurable)
+
+4. Checkpoints
+
+Saved automatically at configurable intervals
+
+Checkpoint structure:
+
+checkpoints/
+    model_epoch_10.pth
+    model_epoch_20.pth
+    ...
+
+
+Allows resume training from any point
+
+Checkpoints include:
+
+Model weights
+
+Optimizer state
+
+Training step / epoch
+
+Config snapshot
+
+Checkpoints stored with version hash for reproducibility
+
+5. Metrics
+
+Metrics computed per epoch and per class:
+
+Classification: accuracy, F1-score
+
+Detection: mAP, IoU, per-class precision/recall
+
+Segmentation: Dice, IoU
+
+Change detection: area overlap, change ratio
+
+Metrics saved in JSON for integration with UI:
+
+{
+  "epoch": 10,
+  "loss": 0.124,
+  "accuracy": 0.92,
+  "mAP50": 0.87,
+  "per_class": {
+      "vehicle": 0.91,
+      "building": 0.85
+  }
+}
+
+
+Integrated with UI dashboard:
+
+Epoch graphs
+
+Real-time loss/accuracy charts
+
+Confusion matrix visualization
+
+Optional geo-spatial metric overlays for mapping projects
+
+6. Exportable Model
+
+After training completes, the engine:
+
+Converts final weights → ONNX (if not already)
+
+Generates config.json, metrics.json, runtime.json
+
+Saves in models/<model_id>/vX.Y/
+
+Ready for Vision Engine inference, Annotation Engine auto-labeling, or Spatial overlays
+
+B. Local vs Remote Training
+1. Local
+
+Engine runs directly on user machine
+
+Utilizes CPU or GPU depending on hardware
+
+Advantages:
+
+Offline
+
+Full privacy
+
+No external latency
+
+2. Remote / Cloud (Optional)
+
+Same config object sent to cloud endpoint
+
+Endpoint executes training (GPU/TPU server)
+
+Returns:
+
+Final model weights
+
+Metrics
+
+Checkpoints
+
+Local UI remains identical:
+
+Polls for progress via async messages
+
+Visualizes loss/accuracy graphs
+
+Prevents logic duplication between local/cloud training
+
+C. Asynchronous UI Interaction
+
+UI never blocks:
+
+Electron sends start-training request → Training Engine process spawns
+
+Engine streams logs asynchronously → UI console
+
+Metrics updated via WebSocket → Graphs update in real-time
+
+Allows:
+
+Pausing/resuming
+
+Cancelling
+
+Real-time monitoring of GPU/CPU usage
+
+D. Integration with Other Engines
+Engine	Interaction
+Dataset Engine	Pulls training data; supports tiling, augmentation, geo-linked data
+Model Manager	Loads initial weights; saves trained model
+Vision Engine	For real-time testing during/after training
+Spatial Engine	Metrics mapped to geo-coordinates (if available)
+Annotation Engine	Auto-label predictions during training for semi-supervised workflows
+UI Engine	Streams logs, metrics, checkpoints
+E. Optional Advanced Features (Phase 2)
+
+Hyperparameter Search / AutoML:
+
+Grid search / Bayesian optimization
+
+Logs best configs automatically
+
+Mixed local/cloud hybrid training:
+
+Local GPU + cloud CPU fallback for heavy datasets
+
+Distributed training (multi-node)
+
+Geo-aware augmentation:
+
+Rotation/scaling aligned with map orientation
+
+Time-series / multi-temporal training:
+
+For change detection or environmental monitoring
+
+✅ Key Takeaways for Developers
+
+Isolated training process ensures UI remains responsive
+
+Unified config object works for local/cloud → no duplication
+
+Checkpointing & versioning guarantee reproducibility
+
+Asynchronous logging & metrics for real-time dashboard
+
+Integration with all other engines (dataset, model, spatial, annotation)
+
+Exportable ONNX models ready for inference in Vision Engine
+
+Scalable design:
+
+Handles large datasets with tiling
+
+Supports GPU/CPU
+
+Extensible for distributed/cloud execution
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3D DIGITAL ENVIRONMENT & RECONSTRUCTION — TECHNICAL SPEC
+
+Goal: Allow Singularity Vision users to convert image/video/drone sequences into 3D digital environments, then run computer vision tasks in 3D space (distance measurement, volume estimation, object detection, simulation).
+
+Architecture Principle:
+
+The 3D Engine is a hybrid system: local lightweight reconstruction for basic users, optional online engine for heavy-duty high-res reconstructions.
+Fully integrated with Dataset Engine, Vision Engine, Spatial Engine, and Electron frontend.
+
+A. 3D Engine Components
+Component	Role
+Local 3D Engine	Basic reconstruction using OpenMVG / COLMAP; CPU-based; small datasets
+Online 3D Engine	Heavy-duty SfM / SLAM; GPU-accelerated; high-res datasets; optional cloud processing
+3D + CV Integration	Projects detections from 2D/geo-space into reconstructed 3D environment
+3D Data Store	Stores point clouds, meshes, textured environments, and metadata
+Visualization Module	Electron frontend renders 3D scene with camera controls, overlays, measurements
+B. Local 3D (Basic)
+
+Use case: Quick reconstructions, offline mode, low-res datasets.
+
+Workflow:
+
+Input: Images / video frames / drone images
+
+Structure-from-Motion (SfM):
+
+Feature extraction (SIFT, ORB)
+
+Feature matching across images
+
+Camera pose estimation
+
+Sparse Point Cloud:
+
+Points calculated from triangulated matched features
+
+Reprojected camera positions
+
+Optional Dense Reconstruction:
+
+Multi-view stereo (MVS) to generate mesh
+
+Texture mapping applied using original images
+
+Outputs:
+
+Point cloud (.PLY / .OBJ)
+
+Basic mesh
+
+Camera positions (for integration with Spatial Engine)
+
+Notes:
+
+CPU-based → no GPU dependency
+
+Works on small datasets (10–100 images)
+
+Tiles / downsamples large images automatically to avoid memory issues
+
+C. Online 3D (Advanced)
+
+Use case: Enterprise, mining, defense, aviation, industrial inspection
+
+Workflow:
+
+User Opt-In: Online processing only triggered if user selects high-res or large dataset
+
+GPU-Accelerated SfM / SLAM:
+
+High-resolution image sequences
+
+Drone GPS metadata used to accelerate pose estimation
+
+SLAM for continuous video input
+
+Dense 3D Reconstruction:
+
+High-density point clouds
+
+High-quality meshes and textures
+
+Optional Hybrid Mode:
+
+Basic reconstruction locally → online engine refines results
+
+Allows preview locally, then generate final high-res model
+
+Outputs:
+
+High-res point clouds (.PLY / .LAS)
+
+Meshes (.OBJ / .FBX)
+
+Textured 3D scene (for realistic rendering)
+
+Metadata: camera poses, geo-coordinates, timestamps
+
+Notes:
+
+Heavy compute → suitable for cloud / server environment
+
+User can choose local preview + online refinement
+
+Optional caching of reconstructed 3D environment for offline use
+
+D. 3D + CV Integration
+
+Goal: Run computer vision tasks inside reconstructed 3D environments.
+
+1. Detection Projection
+
+Input: 2D detections (from Vision Engine)
+
+Process:
+
+Map 2D detection coordinates to original image pixel
+
+Use camera intrinsics & extrinsics to project into 3D space
+
+Store world coordinates for object / bounding volume
+
+Output: 3D bounding boxes, mesh overlays
+
+2. Measurements & Analysis
+
+Measure distances between objects in real-world units (meters)
+
+Calculate volumes (e.g., mining pits) using mesh or voxel models
+
+Track movement over time (multi-temporal sequences)
+
+Overlay annotations & model outputs directly in 3D scene
+
+3. Spatial Integration
+
+Link 3D environment to geo-referenced coordinates
+
+Works with Spatial Engine → user can select region on map → see reconstructed 3D scene
+
+Allows:
+
+Change detection in 3D
+
+Route planning / inspection simulation
+
+Terrain analysis (mining, construction)
+
+E. 3D Engine Storage & Formats
+
+Recommended storage schema (per project):
+
+project_root/
+ ├─ spatial/
+ │    ├─ pointclouds/
+ │    │     └─ scan1.ply
+ │    ├─ meshes/
+ │    │     └─ scan1.obj
+ │    ├─ textures/
+ │    │     └─ scan1_texture/
+ │    └─ camera_poses/
+ │          └─ scan1_poses.json
+
+
+File formats:
+
+Point Clouds → .PLY, .LAS
+
+Meshes → .OBJ, .FBX
+
+Textures → .PNG / .JPG
+
+Camera poses → JSON (intrinsics, extrinsics)
+
+3D CV outputs → ONNX / JSON (3D bounding boxes, annotations)
+
+F. UI / Visualization
+
+Electron Frontend 3D Viewer
+
+Rotate / pan / zoom
+
+Toggle layers: raw mesh, textured mesh, point cloud, CV detections
+
+Distance measurement tool
+
+Volume / area computation overlays
+
+Highlight objects detected in CV tasks
+
+Integration with Spatial Vision Lab
+
+Click a point on 2D map → open corresponding 3D reconstruction
+
+Sync annotations between 2D maps and 3D environment
+
+G. Optional Advanced Features
+
+Multi-temporal reconstruction → detect terrain changes over time
+
+Drone video → automatic SfM frame extraction + GPS metadata usage
+
+Hybrid cloud/local reconstruction → local preview, high-res cloud render
+
+Simulation-ready export → integrate with physics engines (Gazebo, Unity)
+
+Multi-user collaborative 3D annotation
+
+✅ Key Takeaways for Developers
+
+Hybrid design: Local CPU-based for basic users, optional online GPU-accelerated for advanced reconstructions
+
+Integration-ready: Works seamlessly with Vision Engine (detection), Spatial Engine (geo), and Annotation Engine
+
+Outputs: Point clouds, meshes, textured environments, camera metadata
+
+Measurements & CV overlay: Real-world distances, volumes, 3D bounding boxes
+
+UI/UX: Layered 3D visualization in Electron with measurement tools and detection overlays
+
+Optional online engine: High-res, GPU-accelerated, enterprise workloads
+
+Offline first: Local reconstructions can still work with small datasets, respecting user security/privacy
+
+
+
+
+
+
+
+
+
+NDUSTRY PROFILES — TECHNICAL SPEC
+
+Goal: Make Singularity Vision industry-aware. Depending on the user-selected industry profile, the app enables/disables features, enforces constraints, and sets safe defaults. This ensures compliance, usability, and faster adoption in regulated industries like defense, healthcare, mining, aviation, or sports analytics.
+
+Key Principle:
+
+Profiles are behavioral configurations, not separate code.
+Core engines remain unchanged; profiles just control what features are visible, allowed, or mandatory.
+
+A. Architecture & Storage
+
+Each profile is defined as a JSON or YAML behavioral config.
+
+Stored in:
+
+config/
+ └─ industry_profiles/
+      ├─ defense.json
+      ├─ mining.json
+      ├─ health.json
+      ├─ aviation.json
+      ├─ sports.json
+
+
+Example structure:
+
+{
+    "profile_id": "defense",
+    "allowed_features": ["object_detection", "mapping", "3D_reconstruction"],
+    "disabled_features": ["cloud_training", "model_sharing", "OCR_module"],
+    "default_settings": {
+        "execution_mode": "offline",
+        "max_resolution": 4096,
+        "logging_level": "audit",
+        "checkpoint_interval": 2
+    },
+    "mandatory_constraints": {
+        "data_encryption": true,
+        "no_external_data_upload": true,
+        "geo_annotation_required": true
+    }
+}
+
+B. Feature Enable/Disable Logic
+
+Enable/disable features dynamically at runtime in the UI.
+
+Mechanism:
+
+Load industry profile on project creation
+
+Query config:
+
+if "cloud_training" in profile_config["disabled_features"]:
+    disable_ui_element("cloud_training_button")
+
+
+Internally, core engines check runtime flags before executing restricted actions:
+
+if not profile_config["allowed_features"].contains("3D_reconstruction"):
+    raise PermissionError("3D reconstruction is disabled for this industry")
+
+
+Example mappings:
+
+Feature	Defense	Mining	Health	Aviation	Sports
+Cloud Training	❌	✅	❌	✅	✅
+3D Reconstruction	✅	✅	✅	✅	✅
+Volume Measurement	❌	✅	❌	✅	❌
+OCR / Document Analysis	❌	❌	✅	✅	✅
+Anonymization / Privacy	✅	optional	✅	optional	optional
+C. Defaults & Constraints
+
+Profiles set defaults to reduce friction and enforce safe use.
+
+Examples:
+
+Defense:
+
+Execution mode → offline-only
+
+Dataset encryption → mandatory
+
+Max image resolution → 4096x4096
+
+Logging level → audit (all actions logged)
+
+Mining:
+
+Volume tools → enabled by default
+
+3D reconstruction resolution → high (large datasets)
+
+Change detection → enabled
+
+Health:
+
+Anonymization → forced on all datasets
+
+Cloud disabled
+
+DICOM/medical image support → enabled
+
+Constraints enforced before engine execution:
+
+Check engine parameters against profile config
+
+Block actions that violate policy
+
+if industry_profile.mandatory_constraints["data_encryption"] and not dataset.is_encrypted:
+    raise ValidationError("Dataset must be encrypted for this industry")
+
+D. Behavioral Hooks
+
+UI Hooks: Hide/show buttons, disable sliders, lock configuration fields
+
+Engine Hooks: Pre-execution validation, runtime flags, logging
+
+Annotation Hooks: Force geo-coordinates or anonymization depending on profile
+
+Export Hooks: Restrict file formats (e.g., no cloud uploads for Defense / Health)
+
+Example Workflow for Defense Project:
+
+User selects Defense profile → project metadata stores industry_profile = "defense"
+
+UI dynamically disables:
+
+Cloud training
+
+Model sharing
+
+Dataset Engine validates:
+
+All data must be encrypted
+
+No external uploads allowed
+
+Training Engine executes only if constraints are satisfied
+
+Logs all actions for audit purposes
+
+E. Integration With Other Engines
+Engine	Profile Hook
+Dataset Engine	Validate dataset constraints (encryption, geo-awareness, resolution)
+Training Engine	Block disallowed execution modes (e.g., cloud)
+Vision Engine	Restrict task types (OCR disabled in Defense)
+3D Engine	Resolution / volume tools enabled/disabled per profile
+UI Engine	Hide/show buttons, tooltips for mandatory actions, lock fields
+Annotation Engine	Force anonymization, geo-linked annotations, class restrictions
+F. Extensibility
+
+Developers can add new industries easily:
+
+Add new JSON/YAML profile
+
+Specify allowed / disabled features
+
+Set defaults and constraints
+
+No code change needed, purely config-driven
+
+Future support:
+
+Multi-profile projects → hybrid enforcement
+
+User-custom profiles → internal corporate standards
+
+✅ Key Takeaways for Developers
+
+Profiles are behavioral configs, not code changes
+
+Dynamic enforcement: UI + engine + annotation + export
+
+Constraints enforced at runtime to guarantee compliance
+
+Defaults reduce friction: pre-set safe values for fields and tasks
+
+Easily extensible: JSON/YAML based → new industries in minutes
+
+Critical for secure industries: Defense, Healthcare, Aviation, Mining
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+EXPORT & INTEROPERABILITY — TECHNICAL SPEC
+
+Goal: Provide seamless, one-click export of datasets, models, 2D/3D results, and annotations, while preserving metadata and ensuring compatibility with external tools and platforms.
+
+Export is engine-agnostic and works across all modules: Dataset Engine, Vision Engine, Spatial Engine, 3D Engine, and Annotation Engine.
+
+A. Architecture & Flow
+
+Core principle: Exports are registry-driven, not manual.
+
+Each engine maintains a registry of outputs, including metadata, file paths, timestamps, and associated projects.
+
+Export service reads the registry → selects data → converts to requested format → writes files → generates manifest.
+
+Export workflow (high-level):
+
+User selects export type → Export Engine
+        |
+        v
+Validate data availability & integrity
+        |
+        v
+Read internal registries (datasets, models, annotations, 3D reconstructions)
+        |
+        v
+Convert formats if necessary (ONNX, GeoJSON, OBJ, PLY, CSV)
+        |
+        v
+Preserve metadata (timestamps, geo-coordinates, labels)
+        |
+        v
+Bundle files + manifest
+        |
+        v
+Output → ZIP / project bundle / individual files
+
+B. Supported Export Types
+Category	Formats	Notes
+Models	ONNX, PyTorch (.pt), TensorFlow (.pb), SavedModel	Includes config.json, metrics.json, runtime.json
+2D Datasets	COCO (.json), YOLO (.txt), Pascal VOC (.xml), CSV	Includes annotations, class mappings, train/test split
+Geo-aware Datasets	GeoJSON, GeoTIFF	Preserves lat/lon, spatial bounds, timestamps
+3D Reconstructions	PLY, OBJ, FBX	Point clouds, meshes, textures, camera poses
+Reports / Metrics	CSV, JSON	Training metrics, inference metrics, area coverage, change detection stats
+Python Inference Scripts	.py	Auto-generated for trained models + preprocessing pipeline
+C. Metadata Preservation
+
+Every exported object preserves its internal metadata automatically:
+
+Timestamps
+
+Spatial references (lat/lon, altitude)
+
+Camera intrinsics & extrinsics for 3D
+
+Dataset version hash
+
+Model hyperparameters
+
+Example manifest.json for export bundle:
+
+{
+  "project_id": "uuid",
+  "exported_at": "...",
+  "datasets": [
+    {
+      "name": "satellite_images",
+      "version": "v3",
+      "format": "GeoTIFF",
+      "spatial_bounds": {...},
+      "hash": "abc123"
+    }
+  ],
+  "models": [
+    {
+      "name": "vehicle_detector",
+      "format": "ONNX",
+      "task": "detection",
+      "hash": "def456",
+      "metrics": {"mAP": 0.85}
+    }
+  ],
+  "3D_reconstructions": [
+    {
+      "name": "mining_pit_01",
+      "mesh": "OBJ",
+      "pointcloud": "PLY",
+      "camera_poses": "scan1_poses.json"
+    }
+  ]
+}
+
+
+Manifest ensures reproducibility: someone else can load the exported bundle and reproduce experiments exactly.
+
+D. Engine-Specific Export Details
+1. Dataset Engine
+
+Reads dataset registry
+
+Converts annotation formats on demand (YOLO ↔ COCO ↔ Pascal VOC)
+
+Preserves tiling metadata for large images
+
+Optionally exports only selected subsets (train/test/validation)
+
+2. Vision Engine
+
+Exports trained models:
+
+Ensures ONNX standardization
+
+Includes runtime.json for CPU/GPU requirements
+
+Exports inference outputs:
+
+Bounding boxes
+
+Segmentation masks
+
+Geo-referenced overlays
+
+3. Annotation Engine
+
+Exports annotations:
+
+Supports polygons, bounding boxes, temporal frames, geo-coordinates
+
+Converts to requested external format (COCO, YOLO, GeoJSON)
+
+Maintains link to original image/video IDs
+
+4. Spatial Engine
+
+Exports map overlays and geo-referenced detections
+
+Supports multiple coordinate systems (EPSG codes)
+
+Exports GeoJSON, GeoTIFF, CSV
+
+5. 3D Engine
+
+Exports:
+
+Point clouds → PLY / LAS
+
+Meshes → OBJ / FBX
+
+Textures → PNG / JPEG
+
+Camera metadata → JSON
+
+Optionally packages CV detections as 3D bounding boxes
+
+Preserves world units for measurements
+
+E. Automation & One-Click Export
+
+Users do not manually stitch outputs
+
+Export Engine handles:
+
+Reading internal registries → know which files belong to project / experiment
+
+Format conversion → using engine-specific exporters
+
+Metadata preservation → timestamps, geo, camera, versioning
+
+Bundle generation → ZIP + manifest.json
+
+Optional: project snapshot export for sharing with other Singularity Vision users (like a “portable project”).
+
+F. Interoperability
+
+Exports are compatible with external platforms:
+
+GIS tools → QGIS, ArcGIS
+
+3D tools → Unity, Unreal, Blender
+
+ML pipelines → PyTorch, TensorFlow, ONNX Runtime
+
+Cloud CV platforms → Hugging Face, Roboflow (format-compliant)
+
+Key principle: No manual preprocessing needed.
+
+Automatic translation of internal formats to industry standards.
+
+G. Developer Notes
+
+Registry-Driven Export: No direct file references; always read from internal registries → ensures consistency
+
+Metadata-first design: Every exported file carries sufficient metadata to reconstruct context
+
+Engine-aware export: Each engine provides export adapters for its output types
+
+Format conversion modules: Modular converters (YOLO ↔ COCO, GeoTIFF ↔ PNG, PLY ↔ OBJ, etc.)
+
+Bundling: Project bundle contains manifest + all files → reproducibility + sharing
+
+Optional partial export: Users can select specific engines, experiments, or datasets
+
+✅ Takeaway:
+
+The EXPORT & INTEROPERABILITY module guarantees that users can instantly share or integrate their work into other pipelines without manually converting files, stitching results, or losing metadata. It’s registry-driven, format-aware, metadata-preserving, and engine-agnostic.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PERFORMANCE & OFFLOADING — TECHNICAL SPEC
+
+Goal: Optimize resource usage, reduce friction, and allow heavy workloads to be offloaded to cloud or hybrid execution, without breaking offline-first behavior.
+
+A. Core Concept — Smart Task Orchestrator
+
+Every heavy task in the app passes through a central orchestrator before execution.
+
+Tasks include:
+
+Model training
+
+Inference on large datasets or videos
+
+3D reconstruction (SfM / SLAM)
+
+Change detection on high-resolution maps
+
+Orchestrator decisions depend on:
+
+Hardware capability
+
+CPU cores
+
+GPU presence & type (CUDA, OpenCL, Apple M1/M2)
+
+RAM size
+
+Disk space
+
+Dataset size
+
+Number of images
+
+Resolution
+
+Number of frames (for video)
+
+3D point cloud / mesh size
+
+User plan / license
+
+Free / premium (some offloading may be premium-only)
+
+User preferences
+
+Force local / hybrid / remote
+
+Security / offline mode
+
+Decision matrix:
+
+Dataset Size	GPU Available	Plan	Suggested Execution
+Small	Yes / No	Any	Local
+Medium	GPU yes	Free	Local
+Medium	GPU no	Free	Local (CPU slow)
+Large	Any	Premium	Hybrid / Remote
+Extra Large	Any	Any	Remote
+B. Technical Flow
+
+1. Pre-Execution Assessment
+
+Called before running any engine-intensive task.
+
+Checks:
+
+hardware_specs = detect_hardware()
+dataset_stats = get_dataset_stats(dataset)
+user_plan = get_user_plan()
+security_settings = get_project_security()
+
+
+Computes estimated runtime & memory requirement per engine:
+
+Vision Engine → model size + batch size
+
+3D Engine → number of frames + resolution
+
+Spatial Engine → map size + tiles
+
+If resource requirement > available, flag for offload.
+
+2. Execution Mode Decision
+
+Modes:
+
+Local
+
+All engines run on user's PC
+
+Use GPU if available
+
+CPU fallback if GPU unavailable
+
+Offline-capable
+
+Remote / Cloud
+
+Heavy computation (3D reconstruction, large model training) runs on remote engine
+
+User PC acts as client / orchestrator
+
+Data optionally uploaded securely
+
+Results streamed back asynchronously
+
+Hybrid
+
+Preprocessing & lightweight tasks run locally
+
+Heavy tasks offloaded
+
+Example:
+
+Tile satellite imagery locally
+
+Offload large-scale 3D reconstruction to remote engine
+
+Download reconstructed mesh + CV overlays for local visualization
+
+C. Local Resource Management
+
+Engine throttling
+
+Limit number of threads / GPU usage per task
+
+Prevent app from freezing
+
+Memory management
+
+Lazy loading of datasets
+
+Stream large images/videos instead of loading fully into RAM
+
+Use memory-mapped files for GeoTIFF, point clouds
+
+Task Queue
+
+Background queue for long-running tasks
+
+Prioritizes tasks based on user choice
+
+Async & Parallel Execution
+
+Use multiprocessing or asyncio in Python
+
+For Electron frontend: use Web Workers to avoid blocking UI
+
+D. Remote / Cloud Offloading
+
+Optional engine (like your online 2D → 3D engine)
+
+Execution flow:
+
+Serialize task config (dataset pointers, model, params)
+
+Securely upload to remote engine
+
+Monitor progress via API
+
+Stream results / download outputs once complete
+
+Security features
+
+Optional end-to-end encryption
+
+Optional anonymization before upload (especially for Defense / Health)
+
+Advantages
+
+Reduces local memory / CPU/GPU load
+
+Enables very high-resolution or large datasets
+
+Supports premium / enterprise workflows
+
+E. Hybrid Mode (Intelligent)
+
+Combines local preprocessing + remote heavy computation
+
+Example:
+
+Local: Tiling satellite images, indexing datasets, running small model inferences
+
+Remote: Full model training or 3D reconstruction
+
+Results are merged automatically:
+
+Local annotations aligned with remote 3D outputs
+
+Overlays geo-referenced automatically
+
+Workflow:
+
+Local Task → Preprocess → Upload Subset → Remote Engine → Run Task → Return Results → Merge & Visualize Locally
+
+F. Performance Optimization Techniques
+
+Lazy Loading: Load datasets/models only when needed
+
+Tile-based processing: Process large images or maps in chunks
+
+GPU Acceleration: Use ONNX Runtime / TensorRT for inference
+
+Batch Processing: Batch frames/images for efficient computation
+
+Streaming for Video / 3D: Avoid holding full video or mesh in RAM
+
+Profiling: Keep runtime logs for optimization (time per task, memory usage)
+
+G. Developer Notes
+
+Smart Task Orchestrator is a central service that wraps engine calls.
+
+Must query project profile to respect constraints (e.g., Defense = no cloud).
+
+Must estimate task resources before execution and decide execution mode.
+
+Supports local / remote / hybrid modes dynamically.
+
+Integrates with dataset engine, vision engine, 3D engine for precise load assessment.
+
+Must provide feedback to UI:
+
+ETA estimates
+
+Task status
+
+Warnings if local execution is slow
+
+✅ Takeaway:
+
+Performance & Offloading ensures Singularity Vision runs efficiently on small laptops without sacrificing advanced capabilities, by intelligently deciding between local, remote, or hybrid execution based on hardware, dataset size, user plan, and industry profile constraints.
+
+
+
+
+
+
+
+
+
+
+
+
+
+SECURITY & SCALABILITY — TECHNICAL SPEC
+
+Goal: Ensure data safety, compliance with industry standards, and scalable architecture that works for both single users and enterprise deployments.
+
+Singularity Vision must protect data by default, allow optional cloud features, and scale from laptops to servers.
+
+A. Core Principles
+
+Offline-first by default
+
+No forced cloud upload for local datasets or projects.
+
+Users can work fully offline.
+
+Cloud/offline distinction configurable per industry profile:
+
+Defense → strictly offline
+
+Health → optional encrypted cloud sync
+
+Mining/Sports → optional hybrid
+
+Encryption at rest (optional)
+
+User can enable AES-256 encryption for:
+
+Project files
+
+Dataset images/videos
+
+Annotations
+
+3D reconstructions
+
+Key management:
+
+Local key stored securely (system keystore)
+
+Optional password-protected key
+
+Supports key rotation for enterprise users
+
+No forced cloud sync
+
+Cloud/offload engine is opt-in
+
+User data never automatically uploaded
+
+Remote tasks always require explicit confirmation
+
+Enterprise self-hostable engines
+
+All core engines (Vision, Dataset, Spatial, 3D) can be hosted on-premises:
+
+Local servers
+
+Enterprise GPU clusters
+
+Remote / hybrid workflows respect internal network boundaries
+
+Supports Docker/Kubernetes deployment
+
+Allows internal API endpoints for multiple users
+
+B. Data Security Measures
+
+File-level access control
+
+Per-project ACL (read/write)
+
+Multi-user collaboration control (for enterprise)
+
+Enforcement in both local and cloud/offload scenarios
+
+Transport security
+
+Any communication with remote engines uses HTTPS + TLS 1.3
+
+Optionally, client certificates for enterprise
+
+Project sandboxing
+
+Each project is isolated:
+
+Separate directory
+
+Separate dataset/annotation/model registries
+
+Prevents cross-project contamination
+
+Engine processes sandboxed:
+
+Vision Engine, 3D Engine, Spatial Engine run in isolated processes
+
+Memory/file access restricted to current project
+
+Data anonymization
+
+Optional for Health / Defense:
+
+Strip personally identifiable information (PII)
+
+Mask sensitive regions in images/videos
+
+Replace exact GPS coordinates with obfuscated coordinates for testing or cloud processing
+
+Audit logs
+
+Record:
+
+Data imports
+
+Model training runs
+
+Exports
+
+Remote/hybrid offload usage
+
+Stored securely, append-only
+
+Optional central logging for enterprise deployments
+
+C. Scalability
+
+Local scalability
+
+Designed to run on laptops with limited resources:
+
+Lazy loading datasets
+
+Tile-based image processing
+
+Async & parallel task execution
+
+Modular engines:
+
+Load only needed engines
+
+Free memory for other tasks
+
+Enterprise scalability
+
+Self-hostable engines can run on:
+
+GPU clusters
+
+High-memory servers
+
+Multi-node distributed execution
+
+Orchestrator manages task distribution:
+
+Vision tasks → multiple GPUs / nodes
+
+3D reconstruction → distributed SfM / SLAM
+
+Dataset processing → parallel tiling + indexing
+
+Cloud hybrid scalability
+
+Optional remote offload engine scales automatically:
+
+Multi-tenant GPU server
+
+Queued task execution
+
+Auto-scaling based on demand
+
+Only enabled if user opts in
+
+Data volume management
+
+Versioned datasets
+
+Tile-based storage reduces memory pressure
+
+Archival / compression support for old experiments
+
+Incremental updates for large 3D reconstructions or map datasets
+
+D. Developer Notes
+
+Encryption / security must be engine-aware:
+
+Dataset Engine → encrypted tiles
+
+Annotation Engine → encrypted annotation registry
+
+Vision Engine → encrypted model checkpoints
+
+3D Engine → encrypted point clouds / meshes
+
+Offline-first:
+
+No dependencies on internet for core functionality
+
+Cloud features are opt-in and modular
+
+Hybrid deployments:
+
+Support enterprise self-hosting:
+
+Docker containers for engines
+
+REST / gRPC APIs for communication between engines
+
+Centralized task orchestration for multiple users
+
+Audit & compliance logging:
+
+Each engine writes append-only logs
+
+Logs include:
+
+Action type
+
+User ID
+
+Timestamps
+
+Engine version
+
+User configuration:
+
+Users can define:
+
+Local vs hybrid execution
+
+Encryption keys/passwords
+
+Data retention policies
+
+Remote engine endpoint (optional)
+
+E. Key Takeaways
+
+Security & scalability in Singularity Vision ensures that the platform is trustworthy, compliant, and flexible, whether running on a personal laptop, in a cloud/offload scenario, or as a full enterprise deployment.
+
+Offline-first behavior, optional encryption, audit logs, and self-hostable engines guarantee safety for sensitive datasets, while modular execution and task orchestration allow scaling from lightweight personal use to industrial workloads.

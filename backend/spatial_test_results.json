@@ -1,0 +1,43 @@
+{
+  "spatial_index": {
+    "works": [
+      "rtree_available: False",
+      "index_created",
+      "insert_batch: 3 items",
+      "bbox_query: found 2 items",
+      "type_filter: 1 annotations",
+      "version_filter: v1.0=2, v2.0=0",
+      "nearest: 2 items",
+      "determinism: verified",
+      "get_bounds: lon=-122.50--118.20"
+    ],
+    "slow": [],
+    "breaks": []
+  },
+  "tile_manager": {
+    "works": [
+      "config: tile_size=512, overlap=64",
+      "manager_created",
+      "nms: 3 inputs \u2192 2 merged",
+      "iou_calc: 0.1429",
+      "geojson_export",
+      "tile_geo_calc"
+    ],
+    "slow": [],
+    "breaks": []
+  },
+  "geo_queries": {
+    "works": [
+      "project_index_created",
+      "items_indexed: 3",
+      "region_query: 3 items",
+      "point_query: 2 items",
+      "type_filter: images only",
+      "version_filter: verified",
+      "stats: 3 items",
+      "coverage_bounds"
+    ],
+    "slow": [],
+    "breaks": []
+  }
+}

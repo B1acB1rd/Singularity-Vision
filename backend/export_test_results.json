@@ -1,0 +1,37 @@
+{
+  "coco_export": {
+    "works": [
+      "exporter_created",
+      "export_success",
+      "structure_valid",
+      "images: 2",
+      "annotations: 3",
+      "categories: 2",
+      "project_export"
+    ],
+    "slow": [],
+    "breaks": []
+  },
+  "voc_export": {
+    "works": [
+      "exporter_created",
+      "single_export",
+      "xml_structure_valid",
+      "bbox_conversion",
+      "dataset_export: 2 files"
+    ],
+    "slow": [],
+    "breaks": []
+  },
+  "bundle_export": {
+    "works": [
+      "exporter_created",
+      "bundle_created",
+      "has_manifest",
+      "has_datasets",
+      "total_files: 11"
+    ],
+    "slow": [],
+    "breaks": []
+  }
+}

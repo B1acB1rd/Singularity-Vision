@@ -1,0 +1,38 @@
+{
+  "config_hashing": {
+    "works": [
+      "config_created",
+      "hash_computed: adb3b348c27b9e5e",
+      "determinism_verified",
+      "different_config_different_hash",
+      "lr_change_detected"
+    ],
+    "slow": [],
+    "breaks": []
+  },
+  "experiment_binding": {
+    "works": [
+      "tracker_created",
+      "experiment_created: exp_20260113_011852_b622ed",
+      "binding_complete",
+      "experiment_retrievable",
+      "list_experiments: 1",
+      "result_updated",
+      "find_matching_works"
+    ],
+    "slow": [],
+    "breaks": []
+  },
+  "reproducibility": {
+    "works": [
+      "two_experiments_created",
+      "same_config_same_hash",
+      "reproducibility_check_match",
+      "mismatch_detected",
+      "comparison_works",
+      "different_configs_detected"
+    ],
+    "slow": [],
+    "breaks": []
+  }
+}

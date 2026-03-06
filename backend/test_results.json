@@ -1,0 +1,49 @@
+{
+  "dataset_versioning": {
+    "works": [
+      "create_snapshot: version_id=3d051606, hash=a9fb5e41e87f...",
+      "verify_integrity: status=valid",
+      "detect_modification: added=['test_002.jpg']",
+      "list_versions: 1 version(s)",
+      "get_current_version: a9fb5e41e87f..."
+    ],
+    "slow": [],
+    "breaks": []
+  },
+  "task_orchestrator": {
+    "works": [
+      "hardware_detection: 2 cores, 7.9GB RAM, GPU=False",
+      "small_dataset_decision: LOCAL (100 images training)",
+      "large_dataset_decision: HYBRID (50K images training)",
+      "defense_profile_decision: WARNING (50K + Defense)",
+      "time_estimation: 20000s - 37500s"
+    ],
+    "slow": [],
+    "breaks": []
+  },
+  "defense_profile": {
+    "works": [
+      "get_profile: Defense & Security",
+      "constraints: cloud_allowed=False, offline_only=True",
+      "cloud_upload_blocked: error='Cloud operations are not allowed for Defense & Security profile'",
+      "cloud_training disabled",
+      "list_profiles: 6 profiles"
+    ],
+    "slow": [],
+    "breaks": [
+      "Exception: 'id'"
+    ]
+  },
+  "3d_reconstruction": {
+    "works": [
+      "engine_initialized: ReconstructionEngine ready",
+      "config_created: detector=ORB, max_features=1000",
+      "distance_measurement: 5.0 units (correct)",
+      "bounding_box: {'width': 10.0, 'height': 10.0, 'depth': 10.0}",
+      "volume_calculation: 0.5000",
+      "ply_save_load: saved and loaded 2 points"
+    ],
+    "slow": [],
+    "breaks": []
+  }
+}

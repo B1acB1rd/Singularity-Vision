@@ -1,0 +1,429 @@
+/* 3D Reconstruction Lab Styles */
+
+.threed-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0f;
+    color: #e4e4e7;
+}
+
+.threed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: rgba(20, 20, 28, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.threed-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.threed-title h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #f4f4f5;
+}
+
+.badge-core {
+    padding: 0.25rem 0.75rem;
+    background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.threed-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn-primary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #a1a1aa;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+/* Settings Panel */
+.settings-panel {
+    padding: 1rem 1.5rem;
+    background: rgba(30, 30, 40, 0.6);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.settings-panel h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #a1a1aa;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.setting-item label {
+    font-size: 0.75rem;
+    color: #71717a;
+}
+
+.setting-item select,
+.setting-item input {
+    padding: 0.5rem 0.75rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #e4e4e7;
+    font-size: 0.875rem;
+}
+
+.setting-item select:focus,
+.setting-item input:focus {
+    outline: none;
+    border-color: #8b5cf6;
+}
+
+/* Error Banner */
+.error-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(239, 68, 68, 0.1);
+    border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    font-size: 0.875rem;
+}
+
+/* Main Content */
+.threed-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Status Panel */
+.status-panel {
+    width: 320px;
+    padding: 1.5rem;
+    background: rgba(15, 15, 22, 0.8);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    overflow-y: auto;
+}
+
+.status-panel h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #a1a1aa;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.job-status {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.job-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #71717a;
+}
+
+.job-status-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.progress-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8b5cf6, #a855f7);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.75rem;
+    color: #71717a;
+}
+
+.job-result {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    font-size: 0.875rem;
+}
+
+.result-item .label {
+    color: #71717a;
+}
+
+.result-item .value {
+    color: #e4e4e7;
+    font-weight: 500;
+}
+
+.job-error {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 8px;
+    color: #f87171;
+    font-size: 0.75rem;
+}
+
+.no-job {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    text-align: center;
+}
+
+.no-job p {
+    margin-top: 1rem;
+    font-weight: 500;
+    color: #a1a1aa;
+}
+
+.no-job span {
+    font-size: 0.75rem;
+    color: #71717a;
+}
+
+/* View Controls */
+.view-controls {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.view-controls h4 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #71717a;
+    text-transform: uppercase;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.control-buttons button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #a1a1aa;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.control-buttons button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.control-buttons button.active {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: #8b5cf6;
+    color: #a855f7;
+}
+
+.zoom-control {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.zoom-control label {
+    font-size: 0.75rem;
+    color: #71717a;
+}
+
+.zoom-control input[type="range"] {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.zoom-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: #8b5cf6;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Viewer Panel */
+.viewer-panel {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a0f;
+    overflow: hidden;
+}
+
+.point-cloud-canvas {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+}
+
+.point-cloud-canvas:active {
+    cursor: grabbing;
+}
+
+.viewer-placeholder {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+}
+
+.viewer-placeholder h3 {
+    margin-top: 1rem;
+    font-size: 1.25rem;
+    color: #a1a1aa;
+}
+
+.viewer-placeholder p {
+    margin-top: 0.5rem;
+    color: #71717a;
+    font-size: 0.875rem;
+}
+
+.viewer-placeholder ul {
+    margin-top: 1.5rem;
+    list-style: none;
+    text-align: left;
+}
+
+.viewer-placeholder li {
+    padding: 0.375rem 0;
+    color: #71717a;
+    font-size: 0.875rem;
+}
+
+.viewer-info {
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    display: flex;
+    gap: 1.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    color: #a1a1aa;
+}
+
+/* Animations */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

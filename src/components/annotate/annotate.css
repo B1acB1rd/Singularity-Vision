@@ -1,0 +1,133 @@
+/* Annotate View — Premium Styles */
+
+.annotate-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    background: var(--color-bg-primary);
+}
+
+/* ===== SIDEBARS ===== */
+.annotate-sidebar-left,
+.annotate-sidebar-right {
+    width: 240px;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-secondary);
+    border-color: var(--color-border);
+}
+
+.annotate-sidebar-left {
+    border-right: 1px solid var(--color-border);
+}
+
+.annotate-sidebar-right {
+    border-left: 1px solid var(--color-border);
+}
+
+/* Image List */
+.image-list-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    margin: 0 var(--spacing-sm);
+    transition: all var(--transition-fast);
+}
+
+.image-list-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.image-list-item.active {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.image-list-thumb {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-tertiary);
+}
+
+/* Class List */
+.class-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-sm);
+}
+
+.class-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.class-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.class-item.active {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.class-color {
+    width: 16px;
+    height: 16px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+/* ===== MAIN AREA ===== */
+.annotate-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Toolbar */
+.tools-bar {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-bg-secondary);
+    border-bottom: 1px solid var(--color-border);
+    gap: var(--spacing-sm);
+}
+
+/* Canvas Wrapper */
+.canvas-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    background: var(--color-bg-tertiary);
+    /* Checkerboard pattern for transparency */
+    background-image:
+        linear-gradient(45deg, #1a1a1a 25%, transparent 25%),
+        linear-gradient(-45deg, #1a1a1a 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #1a1a1a 75%),
+        linear-gradient(-45deg, transparent 75%, #1a1a1a 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+.canvas-container {
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.canvas-container canvas {
+    display: block;
+}
